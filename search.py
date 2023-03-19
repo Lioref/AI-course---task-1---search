@@ -213,7 +213,29 @@ def nullHeuristic(state, problem=None):
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    frontier = util.PriorityQueue()
+
+    start_node = Node(problem.getStartState(), None, 0)
+    paths_dict = {}  # child state mapped to it's parent state and the action from the parent to the child
+    paths_cost_dict = {start_node.get_state(): 0 + heuristic(start_node.get_state(), problem)}  # node state mapped to path cost to node
+
+    if problem.isGoalState(problem.getStartState()):
+        return []
+    frontier.push(start_node, 0)
+
+    while not frontier.isEmpty():
+        node = frontier.pop()
+        if problem.isGoalState(node.get_state()):
+            return generate_path_to_goal(node, paths_dict)
+        for successor in problem.getSuccessors(node.get_state()):
+            successor_node = Node(*successor)
+            new_cost = paths_cost_dict[node.get_state()] + successor_node.get_cost()
+            heuristic_total_cost = new_cost + heuristic(successor_node.get_state(), problem)
+            if not_visited(successor_node, paths_cost_dict) or is_better_cost(heuristic_total_cost, successor_node,
+                                                                              paths_cost_dict):
+                paths_cost_dict[successor_node.get_state()] = new_cost
+                update_paths_map(child=successor_node, parent=node, paths_map=paths_dict)
+                frontier.push(successor_node, heuristic_total_cost)
 
 
 # Abbreviations
