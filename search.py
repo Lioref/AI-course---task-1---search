@@ -87,7 +87,57 @@ def depthFirstSearch(problem):
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    # problem is of type: searchAgents.PositionSearchProblem
+    # it has attributes: getStartState() - which returns (x,y)
+
+    # setup
+    paths_dict = {}  # maps a child state key to a PathInfo object: it's parent state and to the action from the parent to the child
+    frontier = util.Stack()
+    start_node = Node(problem.getStartState(), None, 0)
+    reached = set()
+
+    if problem.isGoalState(problem.getStartState()):
+        return []
+    setup_first_step(problem, reached, frontier, start_node, paths_dict)
+
+    while not frontier.isEmpty():
+        node = frontier.pop()
+        if problem.isGoalState(node.get_state()):
+            return generate_path_to_goal(goal_node=node, paths_map=paths_dict)
+        for successor in problem.getSuccessors(node.get_state()):
+            successor_node = Node(*successor)
+            if not successor_node.get_state() in reached:
+                update_paths_map(child=successor_node, parent=node, paths_map=paths_dict)
+                frontier.push(successor_node)
+        update_reached(reached, node)
+
+def setup_first_step(problem, reached, frontier, start_node, paths_dict):
+    for successor in problem.getSuccessors(problem.getStartState()):
+        node = Node(*successor)
+        update_paths_map(child=node, parent=start_node, paths_map=paths_dict)
+        frontier.push(node)
+    reached.add(problem.getStartState())
+
+def update_paths_map(child, parent, paths_map):
+    paths_map[child.get_state()] = PathInfo(parent.get_state(), child.get_action())
+
+def update_reached(reached, node):
+    reached.add(node.get_state())
+
+def generate_path_to_goal(goal_node, paths_map):
+    goal_to_start_path = []
+    child_node = goal_node
+    child_state = child_node.get_state()
+    while has_parent(child_state, paths_map):
+        goal_to_start_path.append(paths_map[child_state].get_action())
+        child_state = paths_map[child_state].get_parent_state()
+    goal_to_start_path.reverse()
+    return goal_to_start_path
+
+
+def has_parent(child_state, paths_map):
+    return child_state in paths_map
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
@@ -118,14 +168,26 @@ dfs = depthFirstSearch
 astar = aStarSearch
 ucs = uniformCostSearch
 
+
+class PathInfo:
+    """ A class that defines the info needed to retrace the path after goal is reached """
+    def __init__(self, parent_state, action):
+        self._parent_state = parent_state
+        self._action = action
+
+    def get_parent_state(self):
+        return self._parent_state
+
+    def get_action(self):
+        return self._action
+
 class Node:
     """ A class that defines a node in the search tree """
 
-    def __init__(self, state, action, cost, parent):
+    def __init__(self, state, action, cost):
         self._state = state
         self._action = action
         self._cost = cost
-        self._parent = parent
 
     def get_state(self):
         return self._state
@@ -136,5 +198,3 @@ class Node:
     def get_cost(self):
         return self._cost
 
-    def get_parent(self):
-        return self._parent
