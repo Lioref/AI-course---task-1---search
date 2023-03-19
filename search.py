@@ -19,6 +19,9 @@ Pacman agents (in searchAgents.py).
 
 import util
 
+debug_ctr = 0
+
+
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -70,18 +73,16 @@ def tinyMazeSearch(problem):
     from game import Directions
     s = Directions.SOUTH
     w = Directions.WEST
-    return  [s, s, w, s, w, w, s, w]
+    return [s, s, w, s, w, w, s, w]
+
 
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
-
     Your search algorithm needs to return a list of actions that reaches the
     goal. Make sure to implement a graph search algorithm.
-
     To get started, you might want to try some of these simple commands to
     understand the search problem that is being passed in:
-
     print("Start:", problem.getStartState())
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
@@ -112,6 +113,7 @@ def depthFirstSearch(problem):
                 frontier.push(successor_node)
         update_reached(reached, node)
 
+
 def setup_first_step(problem, reached, frontier, start_node, paths_dict):
     for successor in problem.getSuccessors(problem.getStartState()):
         node = Node(*successor)
@@ -119,11 +121,14 @@ def setup_first_step(problem, reached, frontier, start_node, paths_dict):
         frontier.push(node)
     reached.add(problem.getStartState())
 
+
 def update_paths_map(child, parent, paths_map):
     paths_map[child.get_state()] = PathInfo(parent.get_state(), child.get_action())
 
+
 def update_reached(reached, node):
     reached.add(node.get_state())
+
 
 def generate_path_to_goal(goal_node, paths_map):
     goal_to_start_path = []
@@ -139,15 +144,37 @@ def generate_path_to_goal(goal_node, paths_map):
 def has_parent(child_state, paths_map):
     return child_state in paths_map
 
+
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    frontier = util.Queue()
+    paths_dict = {}  # maps a child state key to a PathInfo object: it's parent state and to the action from the parent to the child
+    start_node = Node(problem.getStartState(), None, 0)
+    reached = set()
+
+    if problem.isGoalState(problem.getStartState()):
+        return []
+    frontier.push(start_node)
+    reached.add(problem.getStartState())
+
+    while not frontier.isEmpty():
+        node = frontier.pop()
+        if problem.isGoalState(node.get_state()):
+            return generate_path_to_goal(goal_node=node, paths_map=paths_dict)
+        for successor in problem.getSuccessors(node.get_state()):
+            successor_node = Node(*successor)
+            if not successor_node.get_state() in reached:
+                update_paths_map(child=successor_node, parent=node, paths_map=paths_dict)
+                update_reached(reached, successor_node)
+                frontier.push(successor_node)
+
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
     util.raiseNotDefined()
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -155,6 +182,7 @@ def nullHeuristic(state, problem=None):
     goal in the provided SearchProblem.  This heuristic is trivial.
     """
     return 0
+
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
@@ -171,6 +199,7 @@ ucs = uniformCostSearch
 
 class PathInfo:
     """ A class that defines the info needed to retrace the path after goal is reached """
+
     def __init__(self, parent_state, action):
         self._parent_state = parent_state
         self._action = action
@@ -180,6 +209,7 @@ class PathInfo:
 
     def get_action(self):
         return self._action
+
 
 class Node:
     """ A class that defines a node in the search tree """
@@ -197,4 +227,3 @@ class Node:
 
     def get_cost(self):
         return self._cost
-
