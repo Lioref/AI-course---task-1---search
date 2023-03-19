@@ -117,3 +117,24 @@ bfs = breadthFirstSearch
 dfs = depthFirstSearch
 astar = aStarSearch
 ucs = uniformCostSearch
+
+class Node:
+    """ A class that defines a node in the search tree """
+
+    def __init__(self, state, action, cost, parent):
+        self._state = state
+        self._action = action
+        self._cost = cost
+        self._parent = parent
+
+    def get_state(self):
+        return self._state
+
+    def get_action(self):
+        return self._action
+
+    def get_cost(self):
+        return self._cost
+
+    def get_parent(self):
+        return self._parent
