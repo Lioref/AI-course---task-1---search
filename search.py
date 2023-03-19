@@ -170,41 +170,6 @@ def breadthFirstSearch(problem):
                 frontier.push(successor_node)
 
 
-# def uniformCostSearch(problem):
-#     """Search the node of least total cost first."""
-#     "*** YOUR CODE HERE ***"
-#     global debug_ctr
-#     print(debug_ctr)
-#     frontier = util.PriorityQueue()
-#
-#     paths_dict = {}  # maps a child state key to a PathInfo object: it's parent state and to the action from the parent to the child
-#     start_node = Node(problem.getStartState(), None, 0)
-#     reached = set()
-#
-#     if problem.isGoalState(problem.getStartState()):
-#         return []
-#     frontier.push(start_node, 0)
-#     reached.add(problem.getStartState())
-#     goal_node = None
-#
-#     while not frontier.isEmpty():
-#         node = frontier.pop()
-#         if problem.isGoalState(node.get_state()):
-#             goal_node = node
-#             # return generate_path_to_goal(goal_node=node, paths_map=paths_dict)
-#         for successor in problem.getSuccessors(node.get_state()):
-#             successor_node = Node(*successor)
-#             successor_path_cost = paths_dict[node.get_state()].get_path_cost() + successor_node.get_cost()
-#             if not successor_node.get_state() in reached or successor_path_cost < paths_dict[successor_node.get_state()].get_path_cost():
-#             # if not successor_node.get_state() in reached or successor_path_cost < get_path_cost_from_paths_map_dict:
-#                 update_paths_map(child=successor_node, parent=node, paths_map=paths_dict)
-#                 paths_dict[successor_node.get_state()].set_path_cost(successor_path_cost)
-#                 update_reached(reached, successor_node)
-#                 frontier.push(successor_node, successor_path_cost)
-#     if goal_node:
-#         return generate_path_to_goal(goal_node=goal_node, paths_map=paths_dict)
-
-
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
@@ -227,11 +192,16 @@ def uniformCostSearch(problem):
             successor_node = Node(*successor)
             new_cost = paths_cost[node.get_state()] + successor_node.get_cost()
 
-            if successor_node.get_state() not in paths_cost or new_cost < paths_cost[successor_node.get_state()]:
+            if not_visited(successor_node, paths_cost) or is_better_cost(new_cost, successor_node, paths_cost):
                 paths_cost[successor_node.get_state()] = new_cost
                 update_paths_map(child=successor_node, parent=node, paths_map=paths_dict)
                 frontier.push(successor_node, new_cost)
 
+def not_visited(node, paths_cost):
+    return node.get_state() not in paths_cost
+
+def is_better_cost(new_cost, node, paths_cost):
+    return new_cost < paths_cost[node.get_state()]
 
 def nullHeuristic(state, problem=None):
     """
