@@ -20,3 +20,4 @@
 /autograder.py
 /test_cases/
 /layouts/
+*.pyc
