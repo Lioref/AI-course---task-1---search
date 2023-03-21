@@ -295,14 +295,21 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # state is defined at ((x,y), (corners left))
+        if self.is_new_corner(self.startingPosition, self.corners):
+            corners_left = self.remove_corner(self.startingPosition, self.corners)
+            return self.startingPosition, corners_left
+        return self.startingPosition, self.corners  # corner are a tuple so are returned by value
 
     def isGoalState(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # corners eaten counter will be 0 iff we've eaten all 4 corners
+        if len(self.get_corners_left(state)):
+            return False
+        return True
 
     def getSuccessors(self, state):
         """
@@ -325,9 +332,44 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            current_position = self.get_position(state)
+            corners_left = self.get_corners_left(state)
+            successor_position = self.get_successor_position(current_position, action)
+            if successor_position: # has not hit wall
+                if self.is_new_corner(successor_position, corners_left):
+                    corners_left = self.remove_corner(successor_position, corners_left)
+                successor_state = (successor_position, corners_left)
+                successors.append((successor_state, action, 1))
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
+
+
+    def remove_corner(self, corner_position, corners_left):
+        new_corners = []
+        for corner in corners_left:
+            if corner != corner_position:
+                new_corners.append(corner)
+        return tuple(new_corners)
+
+    def is_new_corner(self, position, corners_left):
+        return position in corners_left
+
+    def get_position(self, state) -> (int, int):
+        return state[0]
+
+    def get_corners_left(self, state) -> [(int,int)]:
+        return state[1]
+
+    def get_successor_position(self, current_position, action) -> (int, int):
+        x, y = current_position
+        dx, dy = Actions.directionToVector(action)
+        nextx, nexty = int(x + dx), int(y + dy)
+        hits_wall = self.walls[nextx][nexty]
+        if not hits_wall:
+            return nextx, nexty
+        return None
+
 
     def getCostOfActions(self, actions):
         """
