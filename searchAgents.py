@@ -385,6 +385,17 @@ class CornersProblem(search.SearchProblem):
         return len(actions)
 
 
+def get_board_dimensions(corners) -> (int, int):
+    width = 0
+    height = 0
+    for corner in corners:
+        x, y = corner
+        if x > width:
+            width = x
+        if y > height:
+            height = y
+    return width, height
+
 def cornersHeuristic(state, problem):
     """
     A heuristic for the CornersProblem that you defined.
@@ -406,13 +417,13 @@ def cornersHeuristic(state, problem):
     "*** YOUR CODE HERE ***"
     position = problem.get_position(state)
     corners_left = list(problem.get_corners_left(state))
-    res = 0
+    heuristic_distance = 0
     while corners_left:
         closest_corner, distance = find_closest_corner(position, corners_left)
-        res += distance
+        heuristic_distance += distance
         corners_left.remove(closest_corner)
         position = closest_corner
-    return res
+    return heuristic_distance
 
 
 def find_closest_corner(position, corners_left) -> (int, int):
@@ -522,7 +533,45 @@ def foodHeuristic(state, problem):
     """
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    # get the distance to the farthest food from foods left
+    return farthestFoodHeuristic(state, problem)
+
+def farthestFoodHeuristic(state, problem):
+    position, foodGrid = state
+    "*** YOUR CODE HERE ***"
+    # get the distance to the farthest food from foods left
+    if "food_left" not in problem.heuristicInfo:
+        problem.heuristicInfo["food_left"] = foodGrid.asList()
+    if position in get_food_left_list(problem):
+        remove_food_from_list(position, problem)
+    if not len(get_food_left_list(problem)):
+        return 0
+    return get_farthest_food_distance(position, get_food_left_list(problem))
+
+
+
+def get_food_left_list(problem):
+    return problem.heuristicInfo["food_left"]
+
+def remove_food_from_list(position, problem):
+    problem.heuristicInfo["food_left"].remove(position)
+
+def get_farthest_food_distance(position, food_left) -> (int, int):
+    max_food_dist = 0  # maps food to dist(position, food)
+    for food in food_left:
+        food_dist = get_manhattan_distance(position, food)
+        if food_dist > max_food_dist:
+            max_food_dist = food_dist
+    return max_food_dist
+
+# def find_farthest_food(position, food_left) -> (int, int):
+#     food_dist = {}  # maps food to dist(position, food)
+#     for food in food_left:
+#         food_dist[food] = get_manhattan_distance(position, food)
+#     max_distance = max(food_dist.values())
+#     for food, distance in food_dist.items():
+#         if distance == max_distance:
+#             return food, distance
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
