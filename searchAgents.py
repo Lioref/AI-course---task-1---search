@@ -534,28 +534,34 @@ def foodHeuristic(state, problem):
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
     # get the distance to the farthest food from foods left
-    return farthest_food_maze_dist_heuristic(state, problem)
+    #res = farthest_food_maze_dist_heuristic(state, problem)
+    res = get_farthest_food_manhattan_distance(position, foodGrid.asList())
+    #print(position, res)
+    return res
 
 def farthest_food_maze_dist_heuristic(state, problem):
     position, foodGrid = state
+    food_list = foodGrid.asList()
+    #print(position, food_list)
     "*** YOUR CODE HERE ***"
     # setup food left grid
-    if "food_left" not in problem.heuristicInfo:
-        problem.heuristicInfo["food_left"] = foodGrid.asList()
-    if position in get_food_left_list(problem):
-        remove_food_from_list(position, problem)
-    if not len(get_food_left_list(problem)):
-        return 0
-    return get_farthest_food_maze_distance(position, problem)
+    # if "food_left" not in problem.heuristicInfo:
+    #     problem.heuristicInfo["food_left"] = foodGrid.asList()
+    # print(get_food_left_list(problem))
+    # if position in get_food_left_list(problem):
+    #     remove_food_from_list(position, problem)
+    # if not len(get_food_left_list(problem)):
+    #     return 0
+    return get_farthest_food_maze_distance(position, food_list, problem)
 
 def get_maze_dist(position1, position2, problem):
     prob = PositionSearchProblem(problem.startingGameState, start=position1, goal=position2, warn=False, visualize=False)
     return len(search.bfs(prob))
 
-def get_farthest_food_maze_distance(position, problem) -> (int, int):
-    food_left = get_food_left_list(problem)
+def get_farthest_food_maze_distance(position, food_list, problem) -> int:
+    # food_left = get_food_left_list(problem)
     max_food_dist = 0  # maps food to dist(position, food)
-    for food in food_left:
+    for food in food_list:
         food_dist = get_maze_dist(position, food, problem)
         if food_dist > max_food_dist:
             max_food_dist = food_dist
@@ -564,23 +570,24 @@ def get_farthest_food_maze_distance(position, problem) -> (int, int):
 
 def closestFarthestFoodHeuristic(state, problem):
     position, foodGrid = state
+    food_list = foodGrid.as_list()
     "*** YOUR CODE HERE ***"
     # setup food left grid
-    if "food_left" not in problem.heuristicInfo:
-        problem.heuristicInfo["food_left"] = foodGrid.asList()
-    if position in get_food_left_list(problem):
-        remove_food_from_list(position, problem)
-    if not len(get_food_left_list(problem)):
-        return 0
+    # if "food_left" not in problem.heuristicInfo:
+    #     problem.heuristicInfo["food_left"] = foodGrid.asList()
+    # if position in get_food_left_list(problem):
+    #     remove_food_from_list(position, problem)
+    # if not len(get_food_left_list(problem)):
+    #     return 0
     # get the distance to the closest food from current position
-    closest_food_position, closest_food_distance = get_closest_food_manhattan_distance(position, get_food_left_list(problem))
+    closest_food_position, closest_food_distance = get_closest_food_manhattan_distance(position, food_list)
     # get the distance to the farthest food from foods left
-    farthest_food_distance = get_farthest_food_manhattan_distance(closest_food_position, get_food_left_list(problem))
+    farthest_food_distance = get_farthest_food_manhattan_distance(closest_food_position, food_list)
     return closest_food_distance + farthest_food_distance
 
-def get_closest_food_manhattan_distance(position, food_left) -> (int, int):
+def get_closest_food_manhattan_distance(position, food_list) -> (int, int):
     food_to_dists = {}  # maps corner to dist(position, corner)
-    for food in food_left:
+    for food in food_list:
         food_to_dists[food] = get_manhattan_distance(position, food)
     min_distance = min(food_to_dists.values())
     for food, distance in food_to_dists.items():
@@ -607,9 +614,9 @@ def get_food_left_list(problem):
 def remove_food_from_list(position, problem):
     problem.heuristicInfo["food_left"].remove(position)
 
-def get_farthest_food_manhattan_distance(position, food_left) -> (int, int):
+def get_farthest_food_manhattan_distance(position, food_list) -> int:
     max_food_dist = 0  # maps food to dist(position, food)
-    for food in food_left:
+    for food in food_list:
         food_dist = get_manhattan_distance(position, food)
         if food_dist > max_food_dist:
             max_food_dist = food_dist
