@@ -534,7 +534,58 @@ def foodHeuristic(state, problem):
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
     # get the distance to the farthest food from foods left
-    return farthestFoodHeuristic(state, problem)
+    return farthest_food_maze_dist_heuristic(state, problem)
+
+def farthest_food_maze_dist_heuristic(state, problem):
+    position, foodGrid = state
+    "*** YOUR CODE HERE ***"
+    # setup food left grid
+    if "food_left" not in problem.heuristicInfo:
+        problem.heuristicInfo["food_left"] = foodGrid.asList()
+    if position in get_food_left_list(problem):
+        remove_food_from_list(position, problem)
+    if not len(get_food_left_list(problem)):
+        return 0
+    return get_farthest_food_maze_distance(position, problem)
+
+def get_maze_dist(position1, position2, problem):
+    prob = PositionSearchProblem(problem.startingGameState, start=position1, goal=position2, warn=False, visualize=False)
+    return len(search.bfs(prob))
+
+def get_farthest_food_maze_distance(position, problem) -> (int, int):
+    food_left = get_food_left_list(problem)
+    max_food_dist = 0  # maps food to dist(position, food)
+    for food in food_left:
+        food_dist = get_maze_dist(position, food, problem)
+        if food_dist > max_food_dist:
+            max_food_dist = food_dist
+    return max_food_dist
+
+
+def closestFarthestFoodHeuristic(state, problem):
+    position, foodGrid = state
+    "*** YOUR CODE HERE ***"
+    # setup food left grid
+    if "food_left" not in problem.heuristicInfo:
+        problem.heuristicInfo["food_left"] = foodGrid.asList()
+    if position in get_food_left_list(problem):
+        remove_food_from_list(position, problem)
+    if not len(get_food_left_list(problem)):
+        return 0
+    # get the distance to the closest food from current position
+    closest_food_position, closest_food_distance = get_closest_food_manhattan_distance(position, get_food_left_list(problem))
+    # get the distance to the farthest food from foods left
+    farthest_food_distance = get_farthest_food_manhattan_distance(closest_food_position, get_food_left_list(problem))
+    return closest_food_distance + farthest_food_distance
+
+def get_closest_food_manhattan_distance(position, food_left) -> (int, int):
+    food_to_dists = {}  # maps corner to dist(position, corner)
+    for food in food_left:
+        food_to_dists[food] = get_manhattan_distance(position, food)
+    min_distance = min(food_to_dists.values())
+    for food, distance in food_to_dists.items():
+        if distance == min_distance:
+            return food, distance
 
 def farthestFoodHeuristic(state, problem):
     position, foodGrid = state
@@ -546,7 +597,7 @@ def farthestFoodHeuristic(state, problem):
         remove_food_from_list(position, problem)
     if not len(get_food_left_list(problem)):
         return 0
-    return get_farthest_food_distance(position, get_food_left_list(problem))
+    return get_farthest_food_manhattan_distance(position, get_food_left_list(problem))
 
 
 
@@ -556,22 +607,13 @@ def get_food_left_list(problem):
 def remove_food_from_list(position, problem):
     problem.heuristicInfo["food_left"].remove(position)
 
-def get_farthest_food_distance(position, food_left) -> (int, int):
+def get_farthest_food_manhattan_distance(position, food_left) -> (int, int):
     max_food_dist = 0  # maps food to dist(position, food)
     for food in food_left:
         food_dist = get_manhattan_distance(position, food)
         if food_dist > max_food_dist:
             max_food_dist = food_dist
     return max_food_dist
-
-# def find_farthest_food(position, food_left) -> (int, int):
-#     food_dist = {}  # maps food to dist(position, food)
-#     for food in food_left:
-#         food_dist[food] = get_manhattan_distance(position, food)
-#     max_distance = max(food_dist.values())
-#     for food, distance in food_dist.items():
-#         if distance == max_distance:
-#             return food, distance
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -602,7 +644,18 @@ class ClosestDotSearchAgent(SearchAgent):
         problem = AnyFoodSearchProblem(gameState)
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        food_list = self.get_food_list(food)
+        path_to_random_food = self.searchFunction(problem)
+        # get the minimal path to a food (aka find any path, remove that food, run again)
+
+    def get_food_list(self, food):
+        food_list = []
+        for x in range(food.width):
+            for y in range(food.height):
+                if food[x][y]:
+                    food_list.append((x, y))
+        return food_list
+
 
 class AnyFoodSearchProblem(PositionSearchProblem):
     """
@@ -638,7 +691,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
         x,y = state
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return bool(self.food[x][y])
 
 def mazeDistance(point1, point2, gameState):
     """
