@@ -225,6 +225,8 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     while not frontier.isEmpty():
         node = frontier.pop()
+        state = node.get_state()
+        #print(f"at {state[0]}, food: {state[1].asList()}")
         if problem.isGoalState(node.get_state()):
             return generate_path_to_goal(node, paths_dict)
         for successor in problem.getSuccessors(node.get_state()):
