@@ -93,7 +93,7 @@ def depthFirstSearch(problem):
     # it has attributes: getStartState() - which returns (x,y)
 
     # setup
-    paths_dict = {}  # maps a child state key to a PathInfo object: it's parent state and to the action from the parent to the child
+    paths_dict = {}  # maps a child state (key) to a PathInfo object (value): it's parent state, and action from the parent to the child
     frontier = util.Stack()
     start_node = Node(problem.getStartState(), None, 0)
     reached = set()
@@ -154,7 +154,7 @@ def breadthFirstSearch(problem):
     frontier = util.Queue()
     paths_dict = {}  # maps a child state key to a PathInfo object: it's parent state and to the action from the parent to the child
     start_node = Node(problem.getStartState(), None, 0)
-    reached = set()  # set of positions we have already visited (indicating we've seen a shorter path to them)
+    reached = set()     # nodes we visited and found minimal paths to
 
     if problem.isGoalState(problem.getStartState()):
         return []
@@ -169,7 +169,7 @@ def breadthFirstSearch(problem):
             successor_node = Node(*successor)
             if successor_node.get_state() not in reached:
                 update_paths_map(child=successor_node, parent=node, paths_map=paths_dict)
-                update_reached(reached, successor_node)
+                update_reached(reached, successor_node)     # we've just found minimal path to successor
                 frontier.push(successor_node)
 
 
@@ -228,8 +228,6 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 
     while not frontier.isEmpty():
         node = frontier.pop()
-        state = node.get_state()
-        #print(f"at {state[0]}, food: {state[1].asList()}")
         if problem.isGoalState(node.get_state()):
             return generate_path_to_goal(node, paths_dict)
         for successor in problem.getSuccessors(node.get_state()):
@@ -276,8 +274,8 @@ class Node:
 
     def __init__(self, state, action, cost):
         self._state = state
-        self._action = action
-        self._cost = cost
+        self._action = action   # action leading to this state
+        self._cost = cost       # cost of action
 
     def get_state(self):
         return self._state
