@@ -419,8 +419,8 @@ def cornersHeuristic(state, problem):
     corners_left = list(problem.get_corners_left(state))
     heuristic_distance = 0
     while corners_left:
-        closest_corner, distance = find_closest_corner(position, corners_left)
-        heuristic_distance += distance
+        closest_corner, manhattan_distance = find_closest_corner(position, corners_left)
+        heuristic_distance += manhattan_distance
         corners_left.remove(closest_corner)
         position = closest_corner
     return heuristic_distance
@@ -431,9 +431,9 @@ def find_closest_corner(position, corners_left) -> (int, int):
     for corner in corners_left:
         corners_to_dists[corner] = get_manhattan_distance(position, corner)
     min_distance = min(corners_to_dists.values())
-    for corner, distance in corners_to_dists.items():
-        if distance == min_distance:
-            return corner, distance
+    for corner, manhattan_distance in corners_to_dists.items():
+        if manhattan_distance == min_distance:
+            return corner, manhattan_distance
 
 
 def get_manhattan_distance(position_1, position_2):
