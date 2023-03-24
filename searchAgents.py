@@ -535,12 +535,16 @@ def foodHeuristic(state, problem):
     "*** YOUR CODE HERE ***"
     # get the distance to the farthest food from foods left
     return farthestFoodMazeDistHeuristic(state, problem)
+    #return udis_heuristic(state, problem)
 
 def farthestFoodMazeDistHeuristic(state, problem):
     position, foodGrid = state
     "*** YOUR CODE HERE ***"
     # setup food left grid
-    return get_farthest_food_maze_distance(position, foodGrid, problem)
+    #res1 = get_farthest_food_maze_distance(position, foodGrid, problem)
+    res2 = get_farthest_food_grid_distance(state, problem)
+    #if res1 != res2: print(position, res1, res2)
+    return res2
 
 def get_maze_dist(position1, position2, problem):
     prob = PositionSearchProblem(problem.startingGameState, start=position1, goal=position2, warn=False, visualize=False)
@@ -554,6 +558,79 @@ def get_farthest_food_maze_distance(position, foodGrid, problem) -> int:
             max_food_dist = food_dist
     return max_food_dist
 
+
+def get_farthest_food_grid_distance(state, problem):
+    grid_distance = pre_processing(state, problem)
+    position, foodGrid = state
+    max_grid_distance = 0
+
+    for x, y in foodGrid.asList():
+        if grid_distance[x][y] > max_grid_distance:
+            max_grid_distance = grid_distance[x][y]
+    return max_grid_distance
+
+
+# Alternative way to get farthest food maze distance, by filling all board distance
+def udis_heuristic(state, problem):
+    position, foodGrid = state
+    if "distances_from_start_state" not in problem.heuristicInfo:
+        problem.heuristicInfo["distances_from_start_state"] = pre_processing(state, problem)
+
+    farthest_food_dist = get_farthest_food_dist_abs_diff(position, foodGrid, problem.heuristicInfo["distances_from_start_state"])
+    return farthest_food_dist
+
+def get_farthest_food_dist_abs_diff(position, foodGrid, distances_from_start_state):
+    x,y = position
+    farthest_food_dist = 0
+    for food in foodGrid.asList():
+        food_x, food_y = food
+        heuristic_dist = abs(distances_from_start_state[x][y] - distances_from_start_state[food_x][food_y])
+        if heuristic_dist > farthest_food_dist:
+            farthest_food_dist = heuristic_dist
+    return farthest_food_dist
+
+def pre_processing(start_state, problem):
+    distances_from_start_state = []
+    position, foodGrid = start_state
+    build_empty_grid(foodGrid.width, foodGrid.height, distances_from_start_state)
+    calculate_board_distances_from_start_state(position, 0, distances_from_start_state, problem.startingGameState.data.layout)
+    return distances_from_start_state
+
+def calculate_board_distances_from_start_state(position, cost, distances_from_start_state, layout):
+    frontier = util.Queue()
+    frontier.push((position, cost))
+
+    while not frontier.isEmpty():
+        position, cost = frontier.pop()
+        x,y = position
+        if x >= layout.walls.width or y >= layout.walls.height or x < 0 or y < 0:
+            continue
+        if not is_position_empty(x, y, distances_from_start_state):
+            continue
+        if layout.isWall(position):
+            set_wall(x, y, distances_from_start_state)
+            continue
+        else:
+            set_cost(x, y, cost, distances_from_start_state)
+        for neighbour in get_board_neighbours(position):
+            frontier.push((neighbour, cost+1))
+
+def get_board_neighbours(position):
+    x, y = position
+    return [(x-1,y), (x+1,y), (x,y+1), (x,y-1)]
+
+def set_cost(x, y, cost, distances_from_start_state):
+    distances_from_start_state[x][y] = cost
+
+def set_wall(x, y, distances_from_start_state):
+    distances_from_start_state[x][y] = -1
+
+def is_position_empty(x, y, distances_from_start_state):
+    return distances_from_start_state[x][y] == -1
+
+def build_empty_grid(width, height, distances_from_start_state):
+    for x in range(width):
+        distances_from_start_state.append([-1 for _ in range(height)])
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
