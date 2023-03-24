@@ -295,11 +295,11 @@ class CornersProblem(search.SearchProblem):
         space)
         """
         "*** YOUR CODE HERE ***"
-        # state is defined at ((x,y), (corners left))
+        # state is defined as ((x,y), (corners left))
         if self.is_new_corner(self.startingPosition, self.corners):
             corners_left = self.remove_corner(self.startingPosition, self.corners)
             return self.startingPosition, corners_left
-        return self.startingPosition, self.corners  # corner are a tuple so are returned by value
+        return self.startingPosition, self.corners
 
     def isGoalState(self, state):
         """
@@ -335,7 +335,7 @@ class CornersProblem(search.SearchProblem):
             current_position = self.get_position(state)
             corners_left = self.get_corners_left(state)
             successor_position = self.get_successor_position(current_position, action)
-            if successor_position: # has not hit wall
+            if successor_position:  # has not hit wall
                 if self.is_new_corner(successor_position, corners_left):
                     corners_left = self.remove_corner(successor_position, corners_left)
                 successor_state = (successor_position, corners_left)
@@ -415,12 +415,19 @@ def cornersHeuristic(state, problem):
     # find the closest corner
 
     "*** YOUR CODE HERE ***"
+    return no_walls_shortest_distance_heuristic(state, problem)
+
+def no_walls_shortest_distance_heuristic(state, problem):
+    '''
+    This heuristic is a solution to a relaxed problem where we remove the walls and reach all 4 corners in the shortest
+    way (make our way to the closest edge of the board and traverse the perimeter)
+    '''
     position = problem.get_position(state)
     corners_left = list(problem.get_corners_left(state))
     heuristic_distance = 0
     while corners_left:
-        closest_corner, distance = find_closest_corner(position, corners_left)
-        heuristic_distance += distance
+        closest_corner, manhattan_distance = find_closest_corner(position, corners_left)
+        heuristic_distance += manhattan_distance
         corners_left.remove(closest_corner)
         position = closest_corner
     return heuristic_distance
@@ -538,6 +545,11 @@ def foodHeuristic(state, problem):
 
 
 def get_farthest_food_distance_with_grid(position, foodGrid, problem):
+    '''
+    This heuristic for position (x,y) returns the distance of the farthest food from the position using "maze distance"
+    The distance of the farthest food is calculated using a single BFS traversal of the whole board
+    and a board size array
+    '''
     distances_grid = generate_distance_grid(position, foodGrid, problem)
     max_grid_distance = 0
 
@@ -549,30 +561,31 @@ def get_farthest_food_distance_with_grid(position, foodGrid, problem):
 
 
 def generate_distance_grid(position, foodGrid, problem):
-    distances_from_start_state = []
-    build_empty_grid(foodGrid.width, foodGrid.height, distances_from_start_state)
-
-    calculate_board_distances_from_start_state(position, 0, distances_from_start_state, problem.startingGameState.data.layout)
-
-    return distances_from_start_state
+    distances_from_position = []
+    build_empty_grid(foodGrid.width, foodGrid.height, distances_from_position)
+    calculate_board_distances_from_position(position, distances_from_position, problem.startingGameState.data.layout)
+    return distances_from_position
 
 
-def calculate_board_distances_from_start_state(position, cost, distances_grid_from_start_state, layout):
+def calculate_board_distances_from_position(position: (int, int), distances_from_position: [[int]], layout):
+    '''
+    This method runs a BFS traversal of the entire board
+    It logs the shortest distance between 'position' and every other "tile" on the board in distances_from_position
+    '''
     frontier = util.Queue()
-    frontier.push((position, cost))
+    frontier.push((position, 0))
 
     while not frontier.isEmpty():
         position, cost = frontier.pop()
         x,y = position
-        if x >= layout.walls.width or y >= layout.walls.height or x < 0 or y < 0:
+        if x >= layout.walls.width or y >= layout.walls.height or x < 0 or y < 0:  # out of maze size range
             continue
-        if not is_position_empty(x, y, distances_grid_from_start_state):
+        if not is_position_empty(x, y, distances_from_position):  # this position has been reached in a shorter path
             continue
-        if layout.isWall(position):
-            set_wall(x, y, distances_grid_from_start_state)
+        if layout.isWall(position):  # it's neighbours can't be reached
             continue
         else:
-            set_cost(x, y, cost, distances_grid_from_start_state)
+            set_cost(x, y, cost, distances_from_position)
         for neighbour in get_board_neighbours(position):
             frontier.push((neighbour, cost+1))
 
