@@ -438,9 +438,9 @@ def find_closest_corner(position, corners_left) -> (int, int):
     for corner in corners_left:
         corners_to_dists[corner] = get_manhattan_distance(position, corner)
     min_distance = min(corners_to_dists.values())
-    for corner, distance in corners_to_dists.items():
-        if distance == min_distance:
-            return corner, distance
+    for corner, manhattan_distance in corners_to_dists.items():
+        if manhattan_distance == min_distance:
+            return corner, manhattan_distance
 
 
 def get_manhattan_distance(position_1, position_2):
