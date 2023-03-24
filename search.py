@@ -100,18 +100,17 @@ def depthFirstSearch(problem):
 
     if problem.isGoalState(problem.getStartState()):
         return []
-    setup_first_step(problem, reached, frontier, start_node, paths_dict)
-
+    frontier.push(start_node)
     while not frontier.isEmpty():
         node = frontier.pop()
         if problem.isGoalState(node.get_state()):
             return generate_path_to_goal(goal_node=node, paths_map=paths_dict)
         for successor in problem.getSuccessors(node.get_state()):
             successor_node = Node(*successor)
-            if not successor_node.get_state() in reached:
+            if successor_node.get_state() not in reached:
                 update_paths_map(child=successor_node, parent=node, paths_map=paths_dict)
                 frontier.push(successor_node)
-        update_reached(reached, node)
+        update_reached(reached, node)  # after exploring all successor states, we can mark current node as reached
 
 
 def setup_first_step(problem, reached, frontier, start_node, paths_dict):
@@ -129,8 +128,12 @@ def update_paths_map(child, parent, paths_map):
 def update_reached(reached, node):
     reached.add(node.get_state())
 
-
-def generate_path_to_goal(goal_node, paths_map):
+def generate_path_to_goal(goal_node, paths_map) -> [str]:
+    '''
+    This function traverses paths_map dict, which maps a successor state to the action that was taken in the progression
+    from it's predecessor. It starts a collecting actions from the goal state backtracking all the way to start state
+    and finally reverses the list to obtain the shortest path expressed in actions
+    '''
     goal_to_start_path = []
     child_node = goal_node
     child_state = child_node.get_state()
@@ -151,7 +154,7 @@ def breadthFirstSearch(problem):
     frontier = util.Queue()
     paths_dict = {}  # maps a child state key to a PathInfo object: it's parent state and to the action from the parent to the child
     start_node = Node(problem.getStartState(), None, 0)
-    reached = set()
+    reached = set()  # set of positions we have already visited (indicating we've seen a shorter path to them)
 
     if problem.isGoalState(problem.getStartState()):
         return []
